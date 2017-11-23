@@ -6,6 +6,6 @@ setup(name='features_from_phs',
       url='http://github.com/KevSed/features_from_phs',
       author='Kevin Sedlaczek',
       author_email='kevin.sedlaczek@tu-dortmund.de',
-      license='MIT',
+      license='GNU',
       packages=['features_from_phs,photon_stream,numpy,scipy,pandas,sys'],
       zip_safe=False)
