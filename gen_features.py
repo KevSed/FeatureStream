@@ -4,7 +4,8 @@ import scipy
 import pandas as pd
 from fact.io import to_h5py
 
-def gen_features:
+def gen_features():
+    
     # data file
     reader = ps.EventListReader("/net/big-tank/POOL/projects/fact/photon-stream/pass4/phs/2013/10/03/20131003_105.phs.jsonl.gz")
     events = list()
