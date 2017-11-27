@@ -3,20 +3,33 @@ import numpy as np
 import scipy
 import pandas as pd
 from fact.io import to_h5py
+from print_progress import print_progress
 
-def gen_features():
+def gen_features(data_file, output_file):
     
+    """ This generates a certain set of features from photon-stream data files that can be used for further analyses.
+    
+    Inputs:
+    data_file
+    output_file as hdf5
+    
+    """
     # data file
-    reader = ps.EventListReader("/net/big-tank/POOL/projects/fact/photon-stream/pass4/phs/2013/10/03/20131003_105.phs.jsonl.gz")
+    #reader = ps.EventListReader("/net/big-tank/POOL/projects/fact/photon-stream/pass4/phs/2013/10/03/20131003_105.phs.jsonl.gz")
+    reader = ps.EventListReader(data_file)
+    
     events = list()
 
     # loop for events
-
+    
+    j = 0
+    le = 18017
+    
     for event in reader:
         j = j+1
-
+        
         # safe x, y and t components of Photons. shape = (#photons,3)
-        xyt = event.photon_stream.xyt
+        xyt = event.photon_stream.point_cloud
         x, y = xyt[:, :2].T
 
         # clustering of events
@@ -63,6 +76,8 @@ def gen_features():
             events.append(ev)
             
         print_progress(j + 1, le)
-
+            
     df = pd.DataFrame(events)
-    to_h5py('features3.hdf5', df, key='events')
+    to_h5py(output_file, df, key='events')
+    
+    return;

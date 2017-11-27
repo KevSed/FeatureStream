@@ -7,5 +7,5 @@ setup(name='features_from_phs',
       author='Kevin Sedlaczek',
       author_email='kevin.sedlaczek@tu-dortmund.de',
       license='GNU',
-      packages=['features_from_phs,photon_stream,numpy,scipy,pandas,sys'],
+      packages=['features_from_phs'],
       zip_safe=False)
