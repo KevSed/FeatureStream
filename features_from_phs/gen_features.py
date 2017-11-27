@@ -10,21 +10,21 @@ def gen_features(data_file, output_file):
     """ This generates a certain set of features from photon-stream data files that can be used for further analyses.
     
     Inputs:
-    data_file
-    output_file as hdf5
+    data_file:           location of input data file as string
+    output_file as hdf5: destination of output data file as string
     
     """
     # data file
-    #reader = ps.EventListReader("/net/big-tank/POOL/projects/fact/photon-stream/pass4/phs/2013/10/03/20131003_105.phs.jsonl.gz")
     reader = ps.EventListReader(data_file)
     
+    # initialisation of list of dicts containing generated data
     events = list()
 
-    # loop for events
-    
+    # variables for print_progress
     j = 0
     le = 18017
-    
+
+    # loop for events
     for event in reader:
         j = j+1
         
@@ -69,15 +69,15 @@ def gen_features(data_file, output_file):
 
             # number of clusters
             clusters = len(np.bincount(clustering.labels[clustering.labels != -1]))
-            # clusters = np.bincount(clustering.labels + 1)[1]
 
-
+            # put values in dict and append to list of dicts (events)
             ev = {'cog_x': cog_x, 'cog_y': cog_y, 'mean_x': cmean_x, 'stddev_x': cstd_x, 'stddev_y': cstd_y, 'mean_y': cmean_y, 'width': width, 'length': length, 'angle': angle, 'kurtosis_x': ckurtosis_x, 'kurtosis_y': ckurtosis_y, 'skewness_x': cskewness_x, 'skewness_y': cskewness_y, 'clusters': clusters, 'size': size}
             events.append(ev)
             
         print_progress(j + 1, le)
-            
-    df = pd.DataFrame(events)
-    to_h5py(output_file, df, key='events')
     
-    return;
+    # save list of dicts in pandas data frame        
+    df = pd.DataFrame(events)
+    
+    # save data frame in output hdf5-file
+    to_h5py(output_file, df, key='events')
