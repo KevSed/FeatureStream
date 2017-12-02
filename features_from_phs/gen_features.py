@@ -5,18 +5,20 @@ import pandas as pd
 from fact.io import to_h5py
 from print_progress import print_progress
 
+
 def gen_features(data_file, output_file):
-    
-    """ This generates a certain set of features from photon-stream data files that can be used for further analyses.
-    
+
+    """ This generates a certain set of features from photon-stream data files that can
+    be used for further analyses.
+
     Inputs:
     data_file:           location of input data file as string
     output_file as hdf5: destination of output data file as string
-    
+
     """
     # data file
     reader = ps.EventListReader(data_file)
-    
+
     # initialisation of list of dicts containing generated data
     events = list()
 
@@ -27,7 +29,7 @@ def gen_features(data_file, output_file):
     # loop for events
     for event in reader:
         j = j+1
-        
+
         # safe x, y and t components of Photons. shape = (#photons,3)
         xyt = event.photon_stream.point_cloud
         x, y = xyt[:, :2].T
@@ -73,11 +75,11 @@ def gen_features(data_file, output_file):
             # put values in dict and append to list of dicts (events)
             ev = {'cog_x': cog_x, 'cog_y': cog_y, 'mean_x': cmean_x, 'stddev_x': cstd_x, 'stddev_y': cstd_y, 'mean_y': cmean_y, 'width': width, 'length': length, 'angle': angle, 'kurtosis_x': ckurtosis_x, 'kurtosis_y': ckurtosis_y, 'skewness_x': cskewness_x, 'skewness_y': cskewness_y, 'clusters': clusters, 'size': size}
             events.append(ev)
-            
+
         print_progress(j + 1, le)
-    
-    # save list of dicts in pandas data frame        
+
+    # save list of dicts in pandas data frame
     df = pd.DataFrame(events)
-    
+
     # save data frame in output hdf5-file
     to_h5py(output_file, df, key='events')
