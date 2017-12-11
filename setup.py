@@ -11,8 +11,7 @@ setup(name='features_from_phs',
       install_requires=[
           'numpy',
           'scipy',
-          'pandas',
-          'print_progress'
+          'pandas'
           ],
       zip_safe=False
       )
