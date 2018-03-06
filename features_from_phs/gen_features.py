@@ -52,12 +52,13 @@ def gen_features(data_file, sim_file=None):
         clustering = ps.photon_cluster.PhotonStreamCluster(event.photon_stream)
 
         # events from clusters
-        mask = clustering.labels == 0
+        # mask = clustering.labels == 0
 
         # empty dict for values
         ev = {}
 
-        if len(x[mask]) >= 1:
+        # only calculate when there is at least one cluster (if len(x[mask]) >= 1:)
+        if clustering.number >= 1:
             # Simulation truth for energy and direction
             # az_offset_between_magnetic_and_geographic_north = -0.12217305
             # about -7 degrees
@@ -82,6 +83,7 @@ def gen_features(data_file, sim_file=None):
             biggest_cluster = np.argmax(np.bincount(
                 clustering.labels[clustering.labels != -1]))
             mask = clustering.labels == biggest_cluster
+
             # covariance and eigenvalues/vectors for later calculations
             cov = np.cov(x[mask], y[mask])
             eig_vals, eig_vecs = np.linalg.eigh(cov)
