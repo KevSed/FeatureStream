@@ -6,11 +6,14 @@ import warnings
 from fact.instrument import camera_distance_mm_to_deg
 
 
-def is_simulation(input_file):
+def is_simulation_file(input_file):
     reader = ps.EventListReader(input_file)
     event = next(reader)
     return hasattr(event, 'simulation_truth')
 
+
+def is_simulation_event(event):
+    return hasattr(event, 'simulation_truth')
 
 
 def gen_features(data_file, sim_file=None):
@@ -29,7 +32,7 @@ def gen_features(data_file, sim_file=None):
     """
 
     # read in files
-    if is_simulation(data_file):
+    if is_simulation_file(data_file):
         reader = ps.SimulationReader(
           photon_stream_path=data_file,
           mmcs_corsika_path=sim_file)
@@ -51,9 +54,6 @@ def gen_features(data_file, sim_file=None):
         # clustering of events
         clustering = ps.photon_cluster.PhotonStreamCluster(event.photon_stream)
 
-        # events from clusters
-        # mask = clustering.labels == 0
-
         # empty dict for values
         ev = {}
 
@@ -64,7 +64,7 @@ def gen_features(data_file, sim_file=None):
             # about -7 degrees
             # az_offset_between_corsika_and_ceres
             # = - np.pi + az_offset_between_magnetic_and_geographic_north
-            if is_simulation(data_file):
+            if is_simulation_event(event):
                 ev['E_MC'] = event.simulation_truth.air_shower.energy
                 ev['source_position_az'] = np.rad2deg(
                     event.simulation_truth.air_shower.phi + -0.12217305)
