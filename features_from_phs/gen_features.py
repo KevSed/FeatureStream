@@ -65,12 +65,15 @@ def gen_features(data_file, sim_file=None):
             # az_offset_between_corsika_and_ceres
             # = - np.pi + az_offset_between_magnetic_and_geographic_north
             if is_simulation_event(event):
-                ev['E_MC'] = event.simulation_truth.air_shower.energy
+                ev['E_true'] = event.simulation_truth.air_shower.energy
                 ev['source_position_az'] = np.rad2deg(
                     event.simulation_truth.air_shower.phi + -0.12217305)
                 ev['source_position_zd'] = np.rad2deg(
                     event.simulation_truth.air_shower.theta)
                 ev['pointing_position_az'] = event.az + 180
+                ev['event'] = event.simulation_truth.event
+                ev['reuse'] = event.simulation_truth.reuse
+                ev['run'] = event.simulation_truth.run
             else:
                 ev['run'] = event.observation_info.run
                 ev['event'] = event.observation_info.event
@@ -81,18 +84,22 @@ def gen_features(data_file, sim_file=None):
 
             # biggest cluster:
             biggest_cluster = np.argmax(np.bincount(
-                clustering.labels[clustering.labels != -1]))
+                clustering.labels[clustering.labels != -1]
+            ))
             mask = clustering.labels == biggest_cluster
+            ev['cluster_size_ratio'] = (clustering.labels != -1).sum() / mask.sum()
+
+            ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
 
             # covariance and eigenvalues/vectors for later calculations
             cov = np.cov(x[mask], y[mask])
             eig_vals, eig_vecs = np.linalg.eigh(cov)
 
             # Descriptive statistics: mean, std dev, kurtosis, skewness
-            ev['mean_x'] = np.mean(x)
-            ev['mean_y'] = np.mean(y)
-            ev['stddev_x'] = np.std(x)
-            ev['stddev_y'] = np.std(y)
+            # ev['mean_x'] = np.mean(x)
+            # ev['mean_y'] = np.mean(y)
+            # ev['stddev_x'] = np.std(x)
+            # ev['stddev_y'] = np.std(y)
             ev['kurtosis_x'] = scipy.stats.kurtosis(x[mask])
             ev['kurtosis_y'] = scipy.stats.kurtosis(y[mask])
             ev['skewness_x'] = scipy.stats.skew(x[mask])
@@ -102,23 +109,27 @@ def gen_features(data_file, sim_file=None):
             ev['cog_x'] = np.mean(x[mask])
             ev['cog_y'] = np.mean(y[mask])
 
-            # hillas parameter
+            # hillas parameters
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 ev['width'], ev['length'] = np.sqrt(eig_vals)
-            delta = np.arctan2(eig_vecs[1, 1], eig_vecs[0, 1])
+            delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
             ev['delta'] = delta
 
+            # rotate into main component system
+            delta_x = x[mask] - ev['cog_x']
+            delta_y = y[mask] - ev['cog_y']
+            long = np.cos(delta) * delta_x - np.sin(delta) * delta_y
+            trans = np.sin(delta) * delta_y + np.cos(delta) * delta_y
+
             # higher order weights in cluster coordinates
-            cx = np.cos(delta) * x[mask] - np.sin(delta) * y[mask]
-            cy = np.sin(delta) * x[mask] + np.cos(delta) * y[mask]
-            ev['kurtosis_long'] = scipy.stats.kurtosis(cx)
-            ev['kurtosis_trans'] = scipy.stats.kurtosis(cy)
-            ev['skewness_long'] = scipy.stats.skew(cx)
-            ev['skewness_trans'] = scipy.stats.skew(cy)
+            ev['kurtosis_long'] = scipy.stats.kurtosis(long)
+            ev['kurtosis_trans'] = scipy.stats.kurtosis(trans)
+            ev['skewness_long'] = scipy.stats.skew(long)
+            ev['skewness_trans'] = scipy.stats.skew(trans)
 
             # number of photons in biggest cluster
-            ev['size'] = len(x[clustering.labels == biggest_cluster])
+            ev['size'] = mask.sum()
 
             # number of clusters
             ev['clusters'] = clustering.number
