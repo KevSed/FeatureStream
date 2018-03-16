@@ -113,14 +113,14 @@ def gen_features(data_file, sim_file=None):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 ev['width'], ev['length'] = np.sqrt(eig_vals)
-            delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
+                delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
             ev['delta'] = delta
 
             # rotate into main component system
             delta_x = x[mask] - ev['cog_x']
             delta_y = y[mask] - ev['cog_y']
-            long = np.cos(delta) * delta_x - np.sin(delta) * delta_y
-            trans = np.sin(delta) * delta_y + np.cos(delta) * delta_y
+            long = np.cos(delta) * delta_x + np.sin(delta) * delta_y
+            trans = - np.sin(delta) * delta_y + np.cos(delta) * delta_y
 
             # higher order weights in cluster coordinates
             ev['kurtosis_long'] = scipy.stats.kurtosis(long)
