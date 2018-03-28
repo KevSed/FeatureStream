@@ -96,10 +96,6 @@ def gen_features(data_file, sim_file=None):
             eig_vals, eig_vecs = np.linalg.eigh(cov)
 
             # Descriptive statistics: mean, std dev, kurtosis, skewness
-            # ev['mean_x'] = np.mean(x)
-            # ev['mean_y'] = np.mean(y)
-            # ev['stddev_x'] = np.std(x)
-            # ev['stddev_y'] = np.std(y)
             ev['kurtosis_x'] = scipy.stats.kurtosis(x[mask])
             ev['kurtosis_y'] = scipy.stats.kurtosis(y[mask])
             ev['skewness_x'] = scipy.stats.skew(x[mask])
@@ -109,7 +105,7 @@ def gen_features(data_file, sim_file=None):
             ev['cog_x'] = np.mean(x[mask])
             ev['cog_y'] = np.mean(y[mask])
 
-            # hillas parameters
+            # width, length and delta
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 ev['width'], ev['length'] = np.sqrt(eig_vals)
