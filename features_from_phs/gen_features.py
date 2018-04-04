@@ -47,7 +47,7 @@ def gen_features(data_file, sim_file=None):
 
         # safe x, y and t components of Photons. shape = (#photons,3)
         xyt = event.photon_stream.point_cloud
-        x, y = xyt[:, :2].T
+        x, y, t = xyt.T
         x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
         y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
 
@@ -90,39 +90,66 @@ def gen_features(data_file, sim_file=None):
             ev['cluster_size_ratio'] = (clustering.labels != -1).sum() / mask.sum()
 
             ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
+            ev['n_time_slices'] = len(np.unique(t[mask]))
 
             # covariance and eigenvalues/vectors for later calculations
-            cov = np.cov(x[mask], y[mask])
-            eig_vals, eig_vecs = np.linalg.eigh(cov)
+            cov_xy = np.cov(x[mask], y[mask])
+            cov_xt = np.cov(x[mask], t[mask])
+            cov_yt = np.cov(y[mask], t[mask])
+            eig_vals_xy, eig_vecs_xy = np.linalg.eigh(cov_xy)
+            eig_vals_xt, eig_vecs_xt = np.linalg.eigh(cov_xt)
+            eig_vals_yt, eig_vecs_yt = np.linalg.eigh(cov_yt)
 
             # Descriptive statistics: mean, std dev, kurtosis, skewness
             ev['kurtosis_x'] = scipy.stats.kurtosis(x[mask])
             ev['kurtosis_y'] = scipy.stats.kurtosis(y[mask])
+            ev['kurtosis_t'] = scipy.stats.kurtosis(t[mask])
             ev['skewness_x'] = scipy.stats.skew(x[mask])
             ev['skewness_y'] = scipy.stats.skew(y[mask])
+            ev['skewness_t'] = scipy.stats.skew(t[mask])
 
             # means of cluster
             ev['cog_x'] = np.mean(x[mask])
             ev['cog_y'] = np.mean(y[mask])
+            ev['cog_t'] = np.mean(t[mask])
 
             # width, length and delta
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                ev['width'], ev['length'] = np.sqrt(eig_vals)
-                delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
+                ev['width'], ev['length'] = np.sqrt(eig_vals_xy)
+                ev['xt_width'], ev['xt_length'] = np.sqrt(eig_vals_xt)
+                ev['yt_width'], ev['xt_length'] = np.sqrt(eig_vals_xt)
+                delta = np.arctan(eig_vecs_xy[1, 1] / eig_vecs_xy[0, 1])
+                delta_xt = np.arctan(eig_vecs_xt[1, 1] / eig_vecs_xt[0, 1])
+                delta_yt = np.arctan(eig_vecs_yt[1, 1] / eig_vecs_yt[0, 1])
             ev['delta'] = delta
+            ev['delta_xt'] = delta_xt
+            ev['delta_yt'] = delta_yt
 
             # rotate into main component system
             delta_x = x[mask] - ev['cog_x']
             delta_y = y[mask] - ev['cog_y']
-            long = np.cos(delta) * delta_x + np.sin(delta) * delta_y
-            trans = - np.sin(delta) * delta_y + np.cos(delta) * delta_y
+            delta_t = t[mask] - ev['cog_t']
+
+            # xy-rotation
+            x_rot = np.cos(delta) * delta_x + np.sin(delta) * delta_y
+            y_rot = - np.sin(delta) * delta_x + np.cos(delta) * delta_y
+
+            # xt-rotation
+            long = np.cos(delta_xt) * x_rot + np.sin(delta_xt) * delta_t
+            t_rot = - np.sin(delta_xt) * x_rot + np.cos(delta_xt) * delta_t
+
+            # yt-rotation
+            trans = np.cos(delta_yt) * y_rot + np.sin(delta_yt) * t_rot
+            time = - np.sin(delta_yt) * y_rot + np.cos(delta_yt) * t_rot
 
             # higher order weights in cluster coordinates
             ev['kurtosis_long'] = scipy.stats.kurtosis(long)
             ev['kurtosis_trans'] = scipy.stats.kurtosis(trans)
+            ev['kurtosis_time'] = scipy.stats.kurtosis(time)
             ev['skewness_long'] = scipy.stats.skew(long)
             ev['skewness_trans'] = scipy.stats.skew(trans)
+            ev['skewness_time'] = scipy.stats.skew(time)
 
             # number of photons in biggest cluster
             ev['size'] = mask.sum()
