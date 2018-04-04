@@ -18,8 +18,9 @@ def is_simulation_event(event):
 
 def gen_features(data_file, sim_file=None):
 
-    """ This generates a certain set of features from photon-stream simulation
-        or data files that can be used for further analyses.
+    """
+    This generates a certain set of features from photon-stream simulation
+    or data files that can be used for further analyses.
 
     Inputs:
     data_file:          location of input data file as string
