@@ -117,7 +117,7 @@ def gen_features(data_file, sim_file=None):
             delta_x = x[mask] - ev['cog_x']
             delta_y = y[mask] - ev['cog_y']
             long = np.cos(delta) * delta_x + np.sin(delta) * delta_y
-            trans = - np.sin(delta) * delta_y + np.cos(delta) * delta_y
+            trans = - np.sin(delta) * delta_x + np.cos(delta) * delta_y
 
             # higher order weights in cluster coordinates
             ev['kurtosis_long'] = scipy.stats.kurtosis(long)
