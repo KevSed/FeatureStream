@@ -95,7 +95,7 @@ def features(xyt, clustering, ev): # xyt as point_cloud
     ev['skewness_trans'] = scipy.stats.skew(trans)
 
 
-def clustering(phs):
+def do_clustering(phs):
 
     return ps.photon_cluster.PhotonStreamCluster(phs)
 
@@ -137,7 +137,7 @@ def gen_features(data_file, sim_file=None):
         ev = {}
 
         # Do the clustering
-        clustering = clustering(event.photon_stream)
+        clustering = do_clustering(event.photon_stream)
 
         if clustering.number >= 1:
 
