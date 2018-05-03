@@ -46,12 +46,6 @@ def gen_features(data_file, sim_file=None):
     # loop for events
     for event in reader:
 
-        # safe x, y and t components of Photons. shape = (#photons,3)
-        xyt = event.photon_stream.point_cloud
-        x, y = xyt[:, :2].T
-        x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
-        y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
-
         # clustering of events
         clustering = ps.photon_cluster.PhotonStreamCluster(event.photon_stream)
 
@@ -60,6 +54,7 @@ def gen_features(data_file, sim_file=None):
 
         # only calculate when there is at least one cluster (if len(x[mask]) >= 1:)
         if clustering.number >= 1:
+
             # Simulation truth for energy and direction
             # az_offset_between_magnetic_and_geographic_north = -0.12217305
             # about -7 degrees
@@ -91,6 +86,12 @@ def gen_features(data_file, sim_file=None):
             ev['cluster_size_ratio'] = (clustering.labels != -1).sum() / mask.sum()
 
             ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
+
+            # safe x, y and t components of Photons. shape = (#photons,3)
+            xyt = event.photon_stream.point_cloud
+            x, y, t = xyt.T
+            x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
+            y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
 
             # covariance and eigenvalues/vectors for later calculations
             cov = np.cov(x[mask], y[mask])
