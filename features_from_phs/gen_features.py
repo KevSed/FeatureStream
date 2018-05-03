@@ -45,20 +45,22 @@ def gen_features(data_file, sim_file=None):
     # loop for events
     for event in reader:
 
-        # safe x, y and t components of Photons. shape = (#photons,3)
-        xyt = event.photon_stream.point_cloud
-        x, y, t = xyt.T
-        x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
-        y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
-
         # clustering of events
         clustering = ps.photon_cluster.PhotonStreamCluster(event.photon_stream)
 
-        # empty dict for values
-        ev = {}
-
         # only calculate when there is at least one cluster (if len(x[mask]) >= 1:)
         if clustering.number >= 1:
+
+            # empty dict for values
+            ev = {}
+
+            # safe x, y and t components of Photons. shape = (#photons,3)
+            xyt = event.photon_stream.point_cloud
+            x, y, t = xyt.T
+            x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
+            y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
+            t *= 1e9 # convert to nano seconds
+
             # Simulation truth for energy and direction
             # az_offset_between_magnetic_and_geographic_north = -0.12217305
             # about -7 degrees
@@ -118,7 +120,7 @@ def gen_features(data_file, sim_file=None):
                 warnings.simplefilter("ignore")
                 ev['width'], ev['length'] = np.sqrt(eig_vals_xy)
                 ev['xt_width'], ev['xt_length'] = np.sqrt(eig_vals_xt)
-                ev['yt_width'], ev['xt_length'] = np.sqrt(eig_vals_xt)
+                ev['yt_width'], ev['yt_length'] = np.sqrt(eig_vals_yt)
                 delta = np.arctan(eig_vecs_xy[1, 1] / eig_vecs_xy[0, 1])
                 delta_xt = np.arctan(eig_vecs_xt[1, 1] / eig_vecs_xt[0, 1])
                 delta_yt = np.arctan(eig_vecs_yt[1, 1] / eig_vecs_yt[0, 1])
