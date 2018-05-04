@@ -85,13 +85,13 @@ def gen_features(data_file, sim_file=None):
             mask = clustering.labels == biggest_cluster
             ev['cluster_size_ratio'] = (clustering.labels != -1).sum() / mask.sum()
 
-            ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
-
             # safe x, y and t components of Photons. shape = (#photons,3)
             xyt = event.photon_stream.point_cloud
             x, y, t = xyt.T
             x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
             y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
+
+            ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
 
             # covariance and eigenvalues/vectors for later calculations
             cov = np.cov(x[mask], y[mask])
