@@ -1,4 +1,5 @@
 from .gen_features import gen_features
+from .cluster_labels import cluster_labels
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
