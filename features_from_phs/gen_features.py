@@ -18,8 +18,9 @@ def is_simulation_event(event):
 
 def gen_features(data_file, sim_file=None):
 
-    """ This generates a certain set of features from photon-stream simulation
-        or data files that can be used for further analyses.
+    """
+    This generates a certain set of features from photon-stream simulation
+    or data files that can be used for further analyses.
 
     Inputs:
     data_file:          location of input data file as string
@@ -91,6 +92,12 @@ def gen_features(data_file, sim_file=None):
             mask = clustering.labels == biggest_cluster
             ev['cluster_size_ratio'] = (clustering.labels != -1).sum() / mask.sum()
 
+            # safe x, y and t components of Photons. shape = (#photons,3)
+            xyt = event.photon_stream.point_cloud
+            x, y, t = xyt.T
+            x = np.rad2deg(x) / camera_distance_mm_to_deg(1)
+            y = np.rad2deg(y) / camera_distance_mm_to_deg(1)
+
             ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
             ev['n_time_slices'] = len(np.unique(t[mask]))
 
@@ -144,6 +151,8 @@ def gen_features(data_file, sim_file=None):
             # yt-rotation
             trans = np.cos(delta_yt) * y_rot + np.sin(delta_yt) * t_rot
             time = - np.sin(delta_yt) * y_rot + np.cos(delta_yt) * t_rot
+           #  long = np.cos(delta) * delta_x + np.sin(delta) * delta_y
+           #  trans = - np.sin(delta) * delta_x + np.cos(delta) * delta_y
 
             # higher order weights in cluster coordinates
             ev['kurtosis_long'] = scipy.stats.kurtosis(long)
