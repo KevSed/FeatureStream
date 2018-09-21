@@ -1,4 +1,5 @@
 from .gen_features import gen_features
+from .gen_features_norm import gen_features_norm
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
