@@ -5,10 +5,10 @@ import pandas as pd
 import warnings
 from fact.instrument import camera_distance_mm_to_deg, get_pixel_dataframe
 from fact.instrument.camera import get_neighbor_matrix, get_pixel_coords, get_border_pixel_mask
-from .gen_features import is_simulation_file, is_simulation_event, safe_observation_info
+from .gen_features import is_simulation_file, is_simulation_event, safe_observation_info, phs2image
 
 
-def cleaning(image, picture_thresh=5.5, boundary_thresh=2):
+def facttools_cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
     """
     Per pixel threshold based cleaning for Photon Stream events.
 
@@ -23,14 +23,92 @@ def cleaning(image, picture_thresh=5.5, boundary_thresh=2):
     """
 
 
-    # select pixels above picture_thresh
-    pix_above_pic = image >= picture_thresh
+    # matrix containing neighbor information
     neighbor_matrix = get_neighbor_matrix()
+
+    # select pixels above picture_thresh
+    # 1. Find pixels containing more photons than an upper threshold
+    pix_above_pic = image >= picture_thresh
 
     # number of neighboring pixels above picture_thresh for each pixel
     number_of_neighbors_above_picture = neighbor_matrix.dot(pix_above_pic.view(np.byte))
 
     # pixels above picture_thresh and with more than 2 neighboring pixels above same thresh
+    # 2. remove pixels with less than 2 neighbors above that threshold
+    pix_in_pic = pix_above_pic & (number_of_neighbors_above_picture >= 2)
+
+    # 3. Add neighbors of the remaining pixels that are above boundary_thresh
+    pix_above_boundary = (image >= boundary_thresh)
+    pix_in_pic_bound = np.zeros(1440, dtype=bool)
+    for i in range(1440):
+        if pix_in_pic[i]:
+            for j in range(1440):
+                if pix_above_boundary[j] and neighbor_matrix[i, j]:
+                    pix_in_pic_bound[i] = True
+
+    # arrival times per pixel
+    arrival_times = [sum(pix)/len(pix) if len(pix) > 0 else 0 for pix in lol]
+    # 4. Remove pixels that have less than 2 neighbors with an arrival time inside 5ns
+    pix_in_time_intervall = np.zeros(1440, dtype=bool)
+    for i in range(1440):
+        neighbors = 0
+        if pix_in_pic_bound[i]:
+            for j in range(1440):
+                if pix_in_pic_bound[j] and neighbor_matrix[i, j] and np.abs(arrival_times[i] - arrival_times[j]) < 10:
+                    neighbors += 1
+                if neighbors ==2:
+                    pix_in_time_intervall[i] = True
+                    break
+
+    # number of neighboring pixels
+    number_of_neighbors = neighbor_matrix.dot(pix_in_time_intervall.view(np.byte))
+
+    # pixels with more than 2 neighbors
+    # 5. Remove single pixels with less than 2 neighbors in the remaining pixels
+    pix_with_neighbors = number_of_neighbors >= 2
+
+    # 6. Remove pixels that have less than 2 neighbors with an arrival time inside 5ns
+    cleaned_pix = np.zeros(1440, dtype=bool)
+    for i in range(1440):
+        neighbors = 0
+        if pix_with_neighbors[i]:
+            for j in range(1440):
+                if pix_with_neighbors[j] and neighbor_matrix[i, j] and np.abs(arrival_times[i] - arrival_times[j]) < 5:
+                    neighbors += 1
+                if neighbors ==2:
+                    cleaned_pix[i] = True
+                    break
+
+    return cleaned_pix
+
+
+def cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
+    """
+    Per pixel threshold based cleaning for Photon Stream events.
+
+    Inputs:
+    image:          Pixel Image from Photon Stream data
+    picture_thresh: Picture threshold for the cleaning
+    boundary_thresh: Boundary threshold for the cleaning
+
+    return:
+    cleaned_pix:    Boolean array of size 1440 with pixels containing the desired amount of photons
+
+    """
+
+
+    # matrix containing neighbor information
+    neighbor_matrix = get_neighbor_matrix()
+
+    # select pixels above picture_thresh
+    # 1. Find pixels containing more photons than an upper threshold
+    pix_above_pic = image >= picture_thresh
+
+    # number of neighboring pixels above picture_thresh for each pixel
+    number_of_neighbors_above_picture = neighbor_matrix.dot(pix_above_pic.view(np.byte))
+
+    # pixels above picture_thresh and with more than 2 neighboring pixels above same thresh
+    # 2. remove pixels with less than 2 neighbors above that threshold
     pix_in_pic = pix_above_pic & (number_of_neighbors_above_picture >= 2)
 
     # pixels above boundary thresh
@@ -140,7 +218,7 @@ def gen_features_norm(data_file, lower, upper, sim_file=None):
 
         lol = event.photon_stream.list_of_lists
         image = phs2image(lol, lower, upper)
-        mask = cleaning(image)
+        mask = cleaning(image, lol)
 
 
         # empty dict for values

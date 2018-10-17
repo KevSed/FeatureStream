@@ -26,7 +26,7 @@ def phs2image(lol, lower=0, upper=7000):
     """
 
     image = np.array([
-        len(list(filter(lambda p: lower <= p < upper, l)))
+        np.sum((lower <= np.array(l)) & (np.array(l) < upper))
         for l in lol
     ])
     return image
@@ -106,8 +106,10 @@ def calc_hillas_features_phs(phs, clustering):
 
     # biggest cluster:
     biggest_cluster = np.argmax(np.bincount(clustering.labels[clustering.labels != -1]))
-
     mask = clustering.labels == biggest_cluster
+
+    # all clusters
+    # mask = clustering.labels != -1
     ev['cluster_size_ratio'] = (clustering.labels != -1).sum() / mask.sum()
 
     ev['n_pixel'] = len(np.unique(np.column_stack([x[mask], y[mask]]), axis=0))
@@ -121,10 +123,10 @@ def calc_hillas_features_phs(phs, clustering):
     cleaned_img = np.zeros(len(image))
     for i in range(len(phs.list_of_lists)):
         for j in range(len(phs.list_of_lists[i])):
-            k += 1
-            if mask[k-1]:
+            if mask[k]:
                 cleaned_pix[i] = True
                 cleaned_img[i] += 1
+            k += 1
 
     border_ph = [(border_pix[i] and cleaned_pix[i]) for i in range (1440)]
     ev['leakage'] = cleaned_img[border_ph].sum()/mask.sum()
