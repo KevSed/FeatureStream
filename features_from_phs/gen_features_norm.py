@@ -47,14 +47,17 @@ def facttools_cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
                     pix_in_pic_bound[i] = True
 
     # arrival times per pixel
-    arrival_times = [sum(pix)/len(pix) if len(pix) > 0 else 0 for pix in lol]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        arrival_times = np.array([np.nanmedian(l) for l in lol])
+        arrival_times[np.isnan(arrival_times)] = 0
     # 4. Remove pixels that have less than 2 neighbors with an arrival time inside 5ns
     pix_in_time_intervall = np.zeros(1440, dtype=bool)
     for i in range(1440):
         neighbors = 0
         if pix_in_pic_bound[i]:
             for j in range(1440):
-                if pix_in_pic_bound[j] and neighbor_matrix[i, j] and np.abs(arrival_times[i] - arrival_times[j]) < 10:
+                if pix_in_pic_bound[j] and neighbor_matrix[i, j] and np.abs(arrival_times[i] - arrival_times[j]) <= 10:
                     neighbors += 1
                 if neighbors ==2:
                     pix_in_time_intervall[i] = True
@@ -73,7 +76,7 @@ def facttools_cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
         neighbors = 0
         if pix_with_neighbors[i]:
             for j in range(1440):
-                if pix_with_neighbors[j] and neighbor_matrix[i, j] and np.abs(arrival_times[i] - arrival_times[j]) < 5:
+                if pix_with_neighbors[j] and neighbor_matrix[i, j] and np.abs(arrival_times[i] - arrival_times[j]) <= 10:
                     neighbors += 1
                 if neighbors ==2:
                     cleaned_pix[i] = True
