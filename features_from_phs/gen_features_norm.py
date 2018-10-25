@@ -221,7 +221,7 @@ def gen_features_norm(data_file, lower, upper, sim_file=None):
 
         lol = event.photon_stream.list_of_lists
         image = phs2image(lol, lower, upper)
-        mask = cleaning(image, lol)
+        mask = facttools_cleaning(image, lol)
 
 
         # empty dict for values
