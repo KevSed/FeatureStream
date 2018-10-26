@@ -174,7 +174,7 @@ def calc_hillas_features_phs(phs, clustering):
 
 
 
-def gen_features(data_file, eps, sim_file=None):
+def gen_features(data_file, eps=0.1, sim_file=None):
 
     """
     This generates a certain set of features from photon-stream simulation
