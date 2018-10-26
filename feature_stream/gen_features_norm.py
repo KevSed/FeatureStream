@@ -14,6 +14,7 @@ def facttools_cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
 
     Inputs:
     image:          Pixel Image from Photon Stream data
+    lol:            List of arrival times per pixel (list of lists from PhotonStream)
     picture_thresh: Picture threshold for the cleaning
     boundary_thresh: Boundary threshold for the cleaning
 
@@ -91,6 +92,7 @@ def cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
 
     Inputs:
     image:          Pixel Image from Photon Stream data
+    lol:            List of arrival times per pixel (list of lists from PhotonStream)
     picture_thresh: Picture threshold for the cleaning
     boundary_thresh: Boundary threshold for the cleaning
 
