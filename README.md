@@ -1,7 +1,7 @@
 # FeatureStream
 
 A python package to do several analysis tasks on [PhotonStream](https://github.com/fact-project/photon_stream) data, as proposed by the [FACT](https://github.com/fact-project) project.
-This package provides functions for FACT data safed in the PhotonStream format. An open data sample of Crab observations can be found [here](https://fact-project.org/data/)
+This package provides functions for FACT data safed in the PhotonStream format. An open data sample of Crab observations can be found [here](https://fact-project.org/data/).
 
 This package contains functions for
 * image cleaning via DBSCAN
