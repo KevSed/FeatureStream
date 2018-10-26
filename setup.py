@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(name='feature_stream',
       version='0.1',
       description='Generate features for analysis from photon stream data',
-      url='http://github.com/KevSed/features_from_phs',
+      url='http://github.com/KevSed/FeatureStream',
       author='Kevin Sedlaczek',
       author_email='kevin.sedlaczek@tu-dortmund.de',
       license='GNU',
