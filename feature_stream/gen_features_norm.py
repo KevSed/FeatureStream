@@ -8,7 +8,7 @@ from fact.instrument.camera import get_neighbor_matrix, get_pixel_coords, get_bo
 from .gen_features import is_simulation_file, is_simulation_event, safe_observation_info, phs2image
 
 
-def facttools_cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
+def facttools_cleaning(image, lol, lower, upper, picture_thresh=5.5, boundary_thresh=2):
     """
     Per pixel threshold based cleaning for Photon Stream events.
 
@@ -23,6 +23,7 @@ def facttools_cleaning(image, lol, picture_thresh=5.5, boundary_thresh=2):
 
     """
 
+    lol = [[t for t in l if ((lower <= t) & (t < upper))] for l in lol]
 
     # matrix containing neighbor information
     neighbor_matrix = get_neighbor_matrix()
@@ -223,7 +224,7 @@ def gen_features_norm(data_file, lower, upper, sim_file=None):
 
         lol = event.photon_stream.list_of_lists
         image = phs2image(lol, lower, upper)
-        mask = facttools_cleaning(image, lol)
+        mask = facttools_cleaning(image, lol, lower, upper)
 
 
         # empty dict for values
