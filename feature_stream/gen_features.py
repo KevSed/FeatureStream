@@ -4,9 +4,10 @@ import scipy
 import pandas as pd
 import warnings
 from fact.instrument import camera_distance_mm_to_deg
-from fact.instrument.camera import get_border_pixel_mask
+from fact.instrument.camera import get_border_pixel_mask, get_pixel_coords
 
 az_offset_between_magnetic_and_geographic_north = -0.12217305
+pix_x, pix_y = get_pixel_coords()
 
 
 def phs2image(lol, lower=0, upper=7000):
@@ -149,7 +150,23 @@ def calc_hillas_features_phs(phs, clustering):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         ev['width'], ev['length'] = np.sqrt(eig_vals)
-        delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
+#        delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
+#    ev['delta'] = delta
+
+    delta_mask = cleaned_img > mask.sum() * 1.5 / 100
+    # covariance and eigenvalues/vectors for delta
+    if delta_mask.sum() == 0:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ev['width'], ev['length'] = np.sqrt(eig_vals)
+            delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
+    else:
+        cov_d = np.cov(pix_x[delta_mask], pix_y[delta_mask], fweights=cleaned_img[delta_mask])
+        eig_vals, eig_vecs = np.linalg.eigh(cov_d)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ev['width'], ev['length'] = np.sqrt(eig_vals)
+            delta = np.arctan(eig_vecs[1, 1] / eig_vecs[0, 1])
     ev['delta'] = delta
 
     # rotate into main component system
